@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>مولد أرقام هاتف  </title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Cairo:wght@400;600;800&display=swap');
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:#08090c;
+  --surface:#10131a;
+  --card:#151920;
+  --border:#1e2433;
+  --border2:#2a3245;
+  --accent:#4f9eff;
+  --accent-dim:#1a3566;
+  --gold:#f5c842;
+  --text:#dde4f0;
+  --muted:#4a5570;
+  --muted2:#6b7a99;
+  --mono:'IBM Plex Mono',monospace;
+  --sans:'Cairo',sans-serif;
+  --radius:8px;
+}
+
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:var(--sans);
+  min-height:100vh;
+  padding:32px 16px 60px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+}
+
+/* HEADER */
+.hero{text-align:center;margin-bottom:32px}
+.hero-label{
+  font-family:var(--mono);
+  font-size:0.7rem;
+  letter-spacing:3px;
+  text-transform:uppercase;
+  color:var(--accent);
+  margin-bottom:10px;
+}
+.hero h1{
+  font-size:2.1rem;
+  font-weight:800;
+  line-height:1.2;
+  color:var(--text);
+}
+.hero h1 em{
+  font-style:normal;
+  color:var(--accent);
+}
+.hero p{color:var(--muted2);font-size:0.88rem;margin-top:8px}
+
+/* SEARCH & SELECT */
+.controls-wrap{
+  width:100%;
+  max-width:560px;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  margin-bottom:20px;
+}
+
+.search-row{
+  display:flex;
+  gap:10px;
+  align-items:stretch;
+}
+
+.search-box{
+  position:relative;
+  flex:1;
+}
+.search-box input{
+  width:100%;
+  background:var(--surface);
+  border:1px solid var(--border2);
+  border-radius:var(--radius);
+  color:var(--text);
+  font-family:var(--sans);
+  font-size:0.9rem;
+  padding:10px 16px 10px 40px;
+  outline:none;
+  transition:border 0.15s;
+}
+.search-box input::placeholder{color:var(--muted)}
+.search-box input:focus{border-color:var(--accent)}
+.search-icon{
+  position:absolute;
+  left:12px;top:50%;
+  transform:translateY(-50%);
+  color:var(--muted);
+  font-size:0.9rem;
+  pointer-events:none;
+}
+
+.qty-select{
+  background:var(--surface);
+  border:1px solid var(--border2);
+  border-radius:var(--radius);
+  color:var(--text);
+  font-family:var(--sans);
+  font-size:0.9rem;
+  padding:10px 14px;
+  outline:none;
+  cursor:pointer;
+}
+
+/* DROPDOWN */
+.dropdown-wrap{position:relative;width:100%}
+.selected-country{
+  width:100%;
+  background:var(--surface);
+  border:1px solid var(--border2);
+  border-radius:var(--radius);
+  color:var(--text);
+  font-family:var(--sans);
+  font-size:0.9rem;
+  padding:11px 16px;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  transition:border 0.15s;
+  user-select:none;
+}
+.selected-country:hover,.selected-country.open{border-color:var(--accent)}
+.selected-left{display:flex;align-items:center;gap:10px}
+.sel-flag{font-size:1.2rem}
+.sel-name{font-size:0.9rem}
+.sel-code{font-family:var(--mono);font-size:0.8rem;color:var(--accent)}
+.chevron{color:var(--muted);font-size:0.7rem;transition:transform 0.2s}
+.chevron.open{transform:rotate(180deg)}
+
+.dropdown-list{
+  display:none;
+  position:absolute;
+  top:calc(100% + 6px);
+  left:0;right:0;
+  background:var(--card);
+  border:1px solid var(--border2);
+  border-radius:var(--radius);
+  max-height:260px;
+  overflow-y:auto;
+  z-index:100;
+  box-shadow:0 8px 32px rgba(0,0,0,0.5);
+}
+.dropdown-list.open{display:block}
+.dropdown-list::-webkit-scrollbar{width:4px}
+.dropdown-list::-webkit-scrollbar-track{background:transparent}
+.dropdown-list::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+
+.country-option{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:10px 14px;
+  cursor:pointer;
+  transition:background 0.1s;
+  font-size:0.88rem;
+}
+.country-option:hover{background:var(--surface)}
+.country-option.active{background:var(--accent-dim)}
+.opt-flag{font-size:1.1rem;flex-shrink:0}
+.opt-name{flex:1;color:var(--text)}
+.opt-code{font-family:var(--mono);font-size:0.78rem;color:var(--accent);flex-shrink:0}
+
+/* FORMAT TOGGLE */
+.format-row{
+  display:flex;gap:8px;flex-wrap:wrap;
+}
+.fmt-btn{
+  font-family:var(--sans);
+  font-size:0.8rem;
+  padding:6px 14px;
+  border-radius:20px;
+  border:1px solid var(--border2);
+  background:transparent;
+  color:var(--muted2);
+  cursor:pointer;
+  transition:all 0.15s;
+}
+.fmt-btn.active{
+  background:var(--accent-dim);
+  border-color:var(--accent);
+  color:var(--accent);
+}
+
+/* ACTION BUTTONS */
+.action-row{
+  display:flex;gap:10px;flex-wrap:wrap;justify-content:center;
+  margin-bottom:24px;
+}
+.btn-gen{
+  font-family:var(--sans);
+  font-weight:700;
+  font-size:0.95rem;
+  padding:11px 32px;
+  background:var(--accent);
+  color:#08090c;
+  border:none;
+  border-radius:var(--radius);
+  cursor:pointer;
+  transition:all 0.15s;
+}
+.btn-gen:hover{background:#78b8ff;transform:translateY(-1px)}
+.btn-copy-all{
+  font-family:var(--sans);
+  font-weight:600;
+  font-size:0.9rem;
+  padding:11px 24px;
+  background:transparent;
+  border:1px solid var(--border2);
+  color:var(--muted2);
+  border-radius:var(--radius);
+  cursor:pointer;
+  transition:all 0.15s;
+}
+.btn-copy-all:hover{border-color:var(--accent);color:var(--accent)}
+.btn-copy-all.done{border-color:var(--accent);color:var(--accent)}
+
+/* OUTPUT */
+.output-wrap{width:100%;max-width:560px}
+.output-card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:10px;
+  overflow:hidden;
+}
+.output-top{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:12px 18px;
+  border-bottom:1px solid var(--border);
+  background:var(--card);
+}
+.output-meta{display:flex;align-items:center;gap:8px;font-size:0.78rem;color:var(--muted2)}
+.pulse{
+  width:7px;height:7px;border-radius:50%;
+  background:var(--accent);
+  animation:pulse 2s infinite;
+}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+.output-count{font-family:var(--mono);font-size:0.78rem;color:var(--muted)}
+
+.numbers-list{padding:6px 0;min-height:120px}
+
+.number-row{
+  display:flex;
+  align-items:center;
+  gap:0;
+  padding:8px 14px;
+  transition:background 0.1s;
+  border-bottom:1px solid transparent;
+}
+.number-row:hover{background:var(--card)}
+.row-idx{
+  font-family:var(--mono);
+  font-size:0.68rem;
+  color:var(--muted);
+  width:24px;
+  flex-shrink:0;
+  text-align:right;
+}
+.row-flag{font-size:1rem;margin:0 10px;flex-shrink:0}
+.row-number{
+  flex:1;
+  font-family:var(--mono);
+  font-size:0.97rem;
+  font-weight:600;
+  color:var(--text);
+  direction:ltr;
+  letter-spacing:0.5px;
+}
+.row-number .cc{color:var(--accent)}
+.row-country{
+  font-size:0.72rem;
+  color:var(--muted);
+  margin-left:10px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  max-width:90px;
+  direction:rtl;
+  text-align:left;
+}
+.copy-btn{
+  font-size:0.68rem;
+  padding:3px 9px;
+  background:transparent;
+  border:1px solid var(--border2);
+  color:var(--muted);
+  border-radius:4px;
+  cursor:pointer;
+  flex-shrink:0;
+  margin-right:4px;
+  transition:all 0.15s;
+  font-family:var(--sans);
+}
+.copy-btn:hover{border-color:var(--accent);color:var(--accent)}
+.copy-btn.done{color:var(--accent);border-color:var(--accent-dim)}
+
+.empty-state{
+  text-align:center;
+  padding:48px 20px;
+  color:var(--muted);
+}
+.empty-state .globe{font-size:2.5rem;margin-bottom:12px}
+.empty-state p{font-size:0.88rem;line-height:1.8}
+
+/* TOAST */
+.toast{
+  position:fixed;bottom:28px;left:50%;
+  transform:translateX(-50%) translateY(20px);
+  background:var(--accent);
+  color:#08090c;
+  font-family:var(--sans);
+  font-weight:700;
+  font-size:0.88rem;
+  padding:10px 24px;
+  border-radius:30px;
+  opacity:0;
+  transition:all 0.3s;
+  pointer-events:none;
+  z-index:999;
+  white-space:nowrap;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-label">🌍 World Phone Generator</div>
+  <h1>مولّد أرقام <em>عالمي</em></h1>
+  <p>اختر أي دولة وولّد أرقاماً عشوائية بصيغة صحيحة</p>
+</div>
+
+<div class="controls-wrap">
+  <!-- Search -->
+  <div class="search-row">
+    <div class="search-box">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="searchInput" placeholder="ابحث عن دولة بالاسم أو رمز الاتصال..." oninput="filterCountries()">
+    </div>
+    <select class="qty-select" id="qtySelect">
+      <option value="10">10 أرقام</option>
+      <option value="20" selected>20 رقم</option>
+      <option value="30">30 رقم</option>
+      <option value="50">50 رقم</option>
+    </select>
+  </div>
+
+  <!-- Dropdown -->
+  <div class="dropdown-wrap" id="dropdownWrap">
+    <div class="selected-country" id="selectedCountry" onclick="toggleDropdown()">
+      <div class="selected-left">
+        <span class="sel-flag" id="selFlag">🌍</span>
+        <span class="sel-name" id="selName">اختر دولة</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span class="sel-code" id="selCode"></span>
+        <span class="chevron" id="chevron">▼</span>
+      </div>
+    </div>
+    <div class="dropdown-list" id="dropdownList"></div>
+  </div>
+
+  <!-- Format -->
+  <div class="format-row">
+    <button class="fmt-btn active" id="fmt-plain" onclick="setFormat('plain')">بدون مسافات</button>
+    <button class="fmt-btn" id="fmt-spaces" onclick="setFormat('spaces')">مع مسافات</button>
+    <button class="fmt-btn" id="fmt-dash" onclick="setFormat('dash')">مع شرطات</button>
+    <button class="fmt-btn" id="fmt-plus" onclick="setFormat('plus')">+ رمز الدولة</button>
+  </div>
+</div>
+
+<div class="action-row">
+  <button class="btn-gen" onclick="generate()">⟳ توليد أرقام</button>
+  <button class="btn-copy-all" id="copyAllBtn" onclick="copyAll()">📋 نسخ الكل</button>
+</div>
+
+<div class="output-wrap">
+  <div class="output-card">
+    <div class="output-top">
+      <div class="output-meta"><div class="pulse"></div><span id="outputLabel">جاهز</span></div>
+      <span class="output-count" id="outputCount"></span>
+    </div>
+    <div class="numbers-list" id="numbersList">
+      <div class="empty-state">
+        <div class="globe">🌐</div>
+        <p>اختر دولة من القائمة<br>ثم اضغط <strong>توليد أرقام</strong></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ===== COUNTRY DATA =====
+const COUNTRIES = [
+  {name:"ليبيا",nameEn:"Libya",flag:"🇱🇾",code:"+218",len:9,prefixes:["091","092","094","095","096","098"]},
+  {name:"مصر",nameEn:"Egypt",flag:"🇪🇬",code:"+20",len:10,prefixes:["010","011","012","015"]},
+  {name:"السعودية",nameEn:"Saudi Arabia",flag:"🇸🇦",code:"+966",len:9,prefixes:["050","051","053","054","055","056","058","059"]},
+  {name:"الإمارات",nameEn:"UAE",flag:"🇦🇪",code:"+971",len:9,prefixes:["050","052","054","055","056","058"]},
+  {name:"الكويت",nameEn:"Kuwait",flag:"🇰🇼",code:"+965",len:8,prefixes:["5","6","9"]},
+  {name:"قطر",nameEn:"Qatar",flag:"🇶🇦",code:"+974",len:8,prefixes:["3","5","6","7"]},
+  {name:"البحرين",nameEn:"Bahrain",flag:"🇧🇭",code:"+973",len:8,prefixes:["3","6","9"]},
+  {name:"عُمان",nameEn:"Oman",flag:"🇴🇲",code:"+968",len:8,prefixes:["7","9"]},
+  {name:"الأردن",nameEn:"Jordan",flag:"🇯🇴",code:"+962",len:9,prefixes:["07"]},
+  {name:"لبنان",nameEn:"Lebanon",flag:"🇱🇧",code:"+961",len:8,prefixes:["03","07","08"]},
+  {name:"سوريا",nameEn:"Syria",flag:"🇸🇾",code:"+963",len:9,prefixes:["09"]},
+  {name:"العراق",nameEn:"Iraq",flag:"🇮🇶",code:"+964",len:10,prefixes:["07"]},
+  {name:"اليمن",nameEn:"Yemen",flag:"🇾🇪",code:"+967",len:9,prefixes:["07"]},
+  {name:"تونس",nameEn:"Tunisia",flag:"🇹🇳",code:"+216",len:8,prefixes:["2","5","9"]},
+  {name:"الجزائر",nameEn:"Algeria",flag:"🇩🇿",code:"+213",len:9,prefixes:["05","06","07"]},
+  {name:"المغرب",nameEn:"Morocco",flag:"🇲🇦",code:"+212",len:9,prefixes:["06","07"]},
+  {name:"السودان",nameEn:"Sudan",flag:"🇸🇩",code:"+249",len:9,prefixes:["09"]},
+  {name:"الصومال",nameEn:"Somalia",flag:"🇸🇴",code:"+252",len:8,prefixes:["06","07"]},
+  {name:"موريتانيا",nameEn:"Mauritania",flag:"🇲🇷",code:"+222",len:8,prefixes:["2","3","4"]},
+  {name:"فلسطين",nameEn:"Palestine",flag:"🇵🇸",code:"+970",len:9,prefixes:["059","056"]},
+  {name:"المملكة المتحدة",nameEn:"United Kingdom",flag:"🇬🇧",code:"+44",len:10,prefixes:["07"]},
+  {name:"الولايات المتحدة",nameEn:"United States",flag:"🇺🇸",code:"+1",len:10,prefixes:["2","3","4","5","6","7","8","9"]},
+  {name:"كندا",nameEn:"Canada",flag:"🇨🇦",code:"+1",len:10,prefixes:["4","5","6","7","8","9"]},
+  {name:"فرنسا",nameEn:"France",flag:"🇫🇷",code:"+33",len:9,prefixes:["06","07"]},
+  {name:"ألمانيا",nameEn:"Germany",flag:"🇩🇪",code:"+49",len:10,prefixes:["015","016","017"]},
+  {name:"إيطاليا",nameEn:"Italy",flag:"🇮🇹",code:"+39",len:10,prefixes:["3"]},
+  {name:"إسبانيا",nameEn:"Spain",flag:"🇪🇸",code:"+34",len:9,prefixes:["6","7"]},
+  {name:"البرتغال",nameEn:"Portugal",flag:"🇵🇹",code:"+351",len:9,prefixes:["9"]},
+  {name:"هولندا",nameEn:"Netherlands",flag:"🇳🇱",code:"+31",len:9,prefixes:["06"]},
+  {name:"بلجيكا",nameEn:"Belgium",flag:"🇧🇪",code:"+32",len:9,prefixes:["04"]},
+  {name:"سويسرا",nameEn:"Switzerland",flag:"🇨🇭",code:"+41",len:9,prefixes:["07"]},
+  {name:"السويد",nameEn:"Sweden",flag:"🇸🇪",code:"+46",len:9,prefixes:["07"]},
+  {name:"النرويج",nameEn:"Norway",flag:"🇳🇴",code:"+47",len:8,prefixes:["4","9"]},
+  {name:"الدنمارك",nameEn:"Denmark",flag:"🇩🇰",code:"+45",len:8,prefixes:["2","3","4","5"]},
+  {name:"فنلندا",nameEn:"Finland",flag:"🇫🇮",code:"+358",len:9,prefixes:["04","05"]},
+  {name:"بولندا",nameEn:"Poland",flag:"🇵🇱",code:"+48",len:9,prefixes:["5","6","7"]},
+  {name:"روسيا",nameEn:"Russia",flag:"🇷🇺",code:"+7",len:10,prefixes:["9"]},
+  {name:"تركيا",nameEn:"Turkey",flag:"🇹🇷",code:"+90",len:10,prefixes:["05"]},
+  {name:"إيران",nameEn:"Iran",flag:"🇮🇷",code:"+98",len:10,prefixes:["09"]},
+  {name:"باكستان",nameEn:"Pakistan",flag:"🇵🇰",code:"+92",len:10,prefixes:["03"]},
+  {name:"الهند",nameEn:"India",flag:"🇮🇳",code:"+91",len:10,prefixes:["6","7","8","9"]},
+  {name:"بنغلاديش",nameEn:"Bangladesh",flag:"🇧🇩",code:"+880",len:10,prefixes:["013","014","015","016","017","018","019"]},
+  {name:"الصين",nameEn:"China",flag:"🇨🇳",code:"+86",len:11,prefixes:["13","14","15","16","17","18","19"]},
+  {name:"اليابان",nameEn:"Japan",flag:"🇯🇵",code:"+81",len:10,prefixes:["070","080","090"]},
+  {name:"كوريا الجنوبية",nameEn:"South Korea",flag:"🇰🇷",code:"+82",len:10,prefixes:["010"]},
+  {name:"إندونيسيا",nameEn:"Indonesia",flag:"🇮🇩",code:"+62",len:11,prefixes:["08"]},
+  {name:"ماليزيا",nameEn:"Malaysia",flag:"🇲🇾",code:"+60",len:9,prefixes:["01"]},
+  {name:"الفلبين",nameEn:"Philippines",flag:"🇵🇭",code:"+63",len:10,prefixes:["09"]},
+  {name:"تايلاند",nameEn:"Thailand",flag:"🇹🇭",code:"+66",len:9,prefixes:["06","08","09"]},
+  {name:"فيتنام",nameEn:"Vietnam",flag:"🇻🇳",code:"+84",len:9,prefixes:["03","05","07","08","09"]},
+  {name:"أستراليا",nameEn:"Australia",flag:"🇦🇺",code:"+61",len:9,prefixes:["04"]},
+  {name:"نيوزيلندا",nameEn:"New Zealand",flag:"🇳🇿",code:"+64",len:9,prefixes:["02"]},
+  {name:"البرازيل",nameEn:"Brazil",flag:"🇧🇷",code:"+55",len:11,prefixes:["9"]},
+  {name:"الأرجنتين",nameEn:"Argentina",flag:"🇦🇷",code:"+54",len:10,prefixes:["9"]},
+  {name:"المكسيك",nameEn:"Mexico",flag:"🇲🇽",code:"+52",len:10,prefixes:["1","2","3","4","5","6","7","8","9"]},
+  {name:"كولومبيا",nameEn:"Colombia",flag:"🇨🇴",code:"+57",len:10,prefixes:["3"]},
+  {name:"تشيلي",nameEn:"Chile",flag:"🇨🇱",code:"+56",len:9,prefixes:["9"]},
+  {name:"بيرو",nameEn:"Peru",flag:"🇵🇪",code:"+51",len:9,prefixes:["9"]},
+  {name:"جنوب أفريقيا",nameEn:"South Africa",flag:"🇿🇦",code:"+27",len:9,prefixes:["06","07","08"]},
+  {name:"نيجيريا",nameEn:"Nigeria",flag:"🇳🇬",code:"+234",len:10,prefixes:["07","08","09"]},
+  {name:"كينيا",nameEn:"Kenya",flag:"🇰🇪",code:"+254",len:9,prefixes:["07"]},
+  {name:"إثيوبيا",nameEn:"Ethiopia",flag:"🇪🇹",code:"+251",len:9,prefixes:["09"]},
+  {name:"غانا",nameEn:"Ghana",flag:"🇬🇭",code:"+233",len:9,prefixes:["02","05"]},
+  {name:"الكاميرون",nameEn:"Cameroon",flag:"🇨🇲",code:"+237",len:9,prefixes:["6","7"]},
+  {name:"أوكرانيا",nameEn:"Ukraine",flag:"🇺🇦",code:"+380",len:9,prefixes:["05","06","07","09"]},
+  {name:"رومانيا",nameEn:"Romania",flag:"🇷🇴",code:"+40",len:9,prefixes:["07"]},
+  {name:"المجر",nameEn:"Hungary",flag:"🇭🇺",code:"+36",len:9,prefixes:["06"]},
+  {name:"اليونان",nameEn:"Greece",flag:"🇬🇷",code:"+30",len:10,prefixes:["6"]},
+  {name:"أفغانستان",nameEn:"Afghanistan",flag:"🇦🇫",code:"+93",len:9,prefixes:["07"]},
+  {name:"سريلانكا",nameEn:"Sri Lanka",flag:"🇱🇰",code:"+94",len:9,prefixes:["07"]},
+  {name:"نيبال",nameEn:"Nepal",flag:"🇳🇵",code:"+977",len:10,prefixes:["97","98"]},
+  {name:"ميانمار",nameEn:"Myanmar",flag:"🇲🇲",code:"+95",len:9,prefixes:["09"]},
+  {name:"كمبوديا",nameEn:"Cambodia",flag:"🇰🇭",code:"+855",len:9,prefixes:["09","08"]},
+  {name:"سنغافورة",nameEn:"Singapore",flag:"🇸🇬",code:"+65",len:8,prefixes:["8","9"]},
+  {name:"هونغ كونغ",nameEn:"Hong Kong",flag:"🇭🇰",code:"+852",len:8,prefixes:["5","6","9"]},
+  {name:"تايوان",nameEn:"Taiwan",flag:"🇹🇼",code:"+886",len:9,prefixes:["09"]},
+  {name:"إسرائيل",nameEn:"Israel",flag:"🇮🇱",code:"+972",len:9,prefixes:["05"]},
+  {name:"إكوادور",nameEn:"Ecuador",flag:"🇪🇨",code:"+593",len:9,prefixes:["09"]},
+  {name:"بوليفيا",nameEn:"Bolivia",flag:"🇧🇴",code:"+591",len:8,prefixes:["6","7"]},
+  {name:"فنزويلا",nameEn:"Venezuela",flag:"🇻🇪",code:"+58",len:10,prefixes:["04"]},
+  {name:"كوبا",nameEn:"Cuba",flag:"🇨🇺",code:"+53",len:8,prefixes:["5"]},
+  {name:"جامايكا",nameEn:"Jamaica",flag:"🇯🇲",code:"+1876",len:7,prefixes:[""]},
+  {name:"إيرلندا",nameEn:"Ireland",flag:"🇮🇪",code:"+353",len:9,prefixes:["08"]},
+  {name:"النمسا",nameEn:"Austria",flag:"🇦🇹",code:"+43",len:10,prefixes:["06"]},
+  {name:"التشيك",nameEn:"Czech Republic",flag:"🇨🇿",code:"+420",len:9,prefixes:["6","7"]},
+  {name:"كرواتيا",nameEn:"Croatia",flag:"🇭🇷",code:"+385",len:9,prefixes:["09"]},
+  {name:"صربيا",nameEn:"Serbia",flag:"🇷🇸",code:"+381",len:9,prefixes:["06"]},
+  {name:"أذربيجان",nameEn:"Azerbaijan",flag:"🇦🇿",code:"+994",len:9,prefixes:["05","07"]},
+  {name:"جورجيا",nameEn:"Georgia",flag:"🇬🇪",code:"+995",len:9,prefixes:["5","7","9"]},
+  {name:"كازاخستان",nameEn:"Kazakhstan",flag:"🇰🇿",code:"+7",len:10,prefixes:["7"]},
+  {name:"أوزبكستان",nameEn:"Uzbekistan",flag:"🇺🇿",code:"+998",len:9,prefixes:["9"]},
+  {name:"المغرب الأقصى",nameEn:"Comoros",flag:"🇰🇲",code:"+269",len:7,prefixes:["3","7","9"]},
+];
+
+// State
+let selectedCountry = null;
+let currentFormat = 'plain';
+let currentNumbers = [];
+let filteredCountries = [...COUNTRIES];
+
+// ===== INIT =====
+function init() {
+  renderDropdown(COUNTRIES);
+  // Default: Libya
+  selectCountry(COUNTRIES[0]);
+}
+
+function renderDropdown(list) {
+  const dl = document.getElementById('dropdownList');
+  if (list.length === 0) {
+    dl.innerHTML = '<div style="padding:16px;text-align:center;color:var(--muted);font-size:0.85rem">لا توجد نتائج</div>';
+    return;
+  }
+  dl.innerHTML = list.map((c,i) => `
+    <div class="country-option" onclick="selectCountry(COUNTRIES[${COUNTRIES.indexOf(c)}])" id="opt-${COUNTRIES.indexOf(c)}">
+      <span class="opt-flag">${c.flag}</span>
+      <span class="opt-name">${c.name}</span>
+      <span class="opt-code">${c.code}</span>
+    </div>
+  `).join('');
+}
+
+function filterCountries() {
+  const q = document.getElementById('searchInput').value.trim().toLowerCase();
+  filteredCountries = COUNTRIES.filter(c =>
+    c.name.includes(q) ||
+    c.nameEn.toLowerCase().includes(q) ||
+    c.code.includes(q)
+  );
+  renderDropdown(filteredCountries);
+}
+
+function toggleDropdown() {
+  const dl = document.getElementById('dropdownList');
+  const sc = document.getElementById('selectedCountry');
+  const ch = document.getElementById('chevron');
+  const open = dl.classList.toggle('open');
+  sc.classList.toggle('open', open);
+  ch.classList.toggle('open', open);
+}
+
+function selectCountry(country) {
+  selectedCountry = country;
+  document.getElementById('selFlag').textContent = country.flag;
+  document.getElementById('selName').textContent = country.name;
+  document.getElementById('selCode').textContent = country.code;
+  document.getElementById('dropdownList').classList.remove('open');
+  document.getElementById('selectedCountry').classList.remove('open');
+  document.getElementById('chevron').classList.remove('open');
+  // Highlight active
+  document.querySelectorAll('.country-option').forEach(el => el.classList.remove('active'));
+  const idx = COUNTRIES.indexOf(country);
+  const el = document.getElementById('opt-'+idx);
+  if (el) el.classList.add('active');
+}
+
+function setFormat(fmt) {
+  currentFormat = fmt;
+  document.querySelectorAll('.fmt-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('fmt-'+fmt).classList.add('active');
+  if (currentNumbers.length) rerender();
+}
+
+// ===== GENERATE =====
+function randDigits(n) {
+  let s='';
+  for(let i=0;i<n;i++) s+=Math.floor(Math.random()*10);
+  return s;
+}
+
+function makeNumber(country) {
+  const prefix = country.prefixes.length
+    ? country.prefixes[Math.floor(Math.random()*country.prefixes.length)]
+    : '';
+  const remaining = country.len - prefix.length;
+  const rest = randDigits(remaining > 0 ? remaining : country.len);
+  return { country, prefix, rest, local: prefix+rest };
+}
+
+function formatNumber(num) {
+  const full = num.local;
+  switch(currentFormat) {
+    case 'plain': return num.country.code + full;
+    case 'plus': return num.country.code + ' ' + full;
+    case 'spaces': {
+      const chunks = full.match(/.{1,3}/g) || [full];
+      return num.country.code + ' ' + chunks.join(' ');
+    }
+    case 'dash': {
+      const chunks = full.match(/.{1,3}/g) || [full];
+      return num.country.code + '-' + chunks.join('-');
+    }
+    default: return num.country.code + full;
+  }
+}
+
+function generate() {
+  if (!selectedCountry) { showToast('اختر دولة أولاً'); return; }
+  const qty = parseInt(document.getElementById('qtySelect').value);
+  currentNumbers = Array.from({length: qty}, () => makeNumber(selectedCountry));
+  rerender();
+}
+
+function rerender() {
+  const list = document.getElementById('numbersList');
+  const label = document.getElementById('outputLabel');
+  const count = document.getElementById('outputCount');
+
+  label.textContent = selectedCountry.flag + ' ' + selectedCountry.name;
+  count.textContent = currentNumbers.length + ' رقم';
+
+  list.innerHTML = '';
+  currentNumbers.forEach((num, i) => {
+    const formatted = formatNumber(num);
+    const row = document.createElement('div');
+    row.className = 'number-row';
+
+    const idx = document.createElement('span');
+    idx.className = 'row-idx';
+    idx.textContent = i+1;
+
+    const flag = document.createElement('span');
+    flag.className = 'row-flag';
+    flag.textContent = num.country.flag;
+
+    const numEl = document.createElement('span');
+    numEl.className = 'row-number';
+    numEl.dir = 'ltr';
+    numEl.innerHTML = `<span class="cc">${num.country.code}</span>${num.local}`;
+    numEl.dataset.full = formatted;
+
+    const copyBtn = document.createElement('button');
+    copyBtn.className = 'copy-btn';
+    copyBtn.textContent = 'نسخ';
+    copyBtn.onclick = () => {
+      navigator.clipboard.writeText(formatted).then(() => {
+        copyBtn.textContent = '✓';
+        copyBtn.classList.add('done');
+        setTimeout(() => { copyBtn.textContent = 'نسخ'; copyBtn.classList.remove('done'); }, 1500);
+      });
+    };
+
+    row.appendChild(idx);
+    row.appendChild(flag);
+    row.appendChild(numEl);
+    row.appendChild(copyBtn);
+    list.appendChild(row);
+  });
+
+  document.getElementById('copyAllBtn').textContent = '📋 نسخ الكل';
+  document.getElementById('copyAllBtn').classList.remove('done');
+}
+
+function copyAll() {
+  if (!currentNumbers.length) return;
+  const text = currentNumbers.map(n => formatNumber(n)).join('\n');
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.getElementById('copyAllBtn');
+    btn.textContent = '✓ تم النسخ';
+    btn.classList.add('done');
+    setTimeout(() => { btn.textContent = '📋 نسخ الكل'; btn.classList.remove('done'); }, 2000);
+    showToast('تم نسخ ' + currentNumbers.length + ' رقم');
+  });
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+// Close dropdown on outside click
+document.addEventListener('click', e => {
+  if (!document.getElementById('dropdownWrap').contains(e.target)) {
+    document.getElementById('dropdownList').classList.remove('open');
+    document.getElementById('selectedCountry').classList.remove('open');
+    document.getElementById('chevron').classList.remove('open');
+  }
+});
+
+init();
+</script>
+</body>
+</html>
